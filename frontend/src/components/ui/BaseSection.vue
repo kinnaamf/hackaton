@@ -7,7 +7,7 @@ defineProps<{
 </script>
 
 <template>
-  <section class="w-full px-6">
+  <section class="w-full">
     <div class="mb-8 flex items-end justify-between gap-6">
       <div>
         <span

@@ -8,7 +8,7 @@ import AppFooter from "@/components/layout/AppFooter.vue";
   <header>
     <AppHeader class="sticky left-0 top-0"/>
   </header>
-  <main class="max-w-[1440px] mx-auto">
+  <main class="max-w-[1440px] mx-auto px-6 md:px-8 lg:px-12">
     <RouterView/>
   </main>
   <footer>

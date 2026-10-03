@@ -35,12 +35,9 @@ const stats = [
 </script>
 
 <template>
-  <section class="">
+  <section class="px-">
     <div
-        class="
-             border-y border-slate-200
-             py-6"
-    >
+        class="border-y border-slate-200 py-4">
       <div
           class="grid grid-cols-2 lg:grid-cols-4"
       >
