@@ -35,7 +35,7 @@ const stats = [
 </script>
 
 <template>
-  <section class="px-">
+  <section class="w-full">
     <div
         class="border-y border-slate-200 py-4">
       <div
@@ -44,7 +44,7 @@ const stats = [
         <div
             v-for="(stat, index) in stats"
             :key="stat.id"
-            class="flex items-center gap-4 px-4 py-3
+            class="flex items-center gap-4 px-3 py-3 md:px-4
                  lg:py-0
                  lg:border-r lg:border-slate-200
                  last:lg:border-r-0"

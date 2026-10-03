@@ -94,7 +94,7 @@ const schools: SchoolCard[] = [
       paragraph="Compară rezultatele pentru categoria selectată."
   >
     <template #actions>
-      <div class="flex items-center gap-2">
+      <div class="flex w-full flex-col gap-2 sm:flex-row sm:items-center">
         <div class="flex bg-white p-2 rounded-md gap-2">
           <button v-for="(category, index) in categories"
                   @click="selectedYear = index"
@@ -106,7 +106,7 @@ const schools: SchoolCard[] = [
           </button>
         </div>
 
-        <div class="relative bg-white h-12 rounded-md">
+        <div class="relative bg-white h-12 rounded-md sm:w-32">
           <select
               class="w-full h-full px-4 pr-10 appearance-none cursor-pointer outline-none bg-transparent"
           >

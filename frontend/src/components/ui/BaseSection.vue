@@ -8,7 +8,7 @@ defineProps<{
 
 <template>
   <section class="w-full">
-    <div class="mb-8 flex items-end justify-between gap-6">
+    <div class="mb-8 flex flex-col gap-5 md:flex-row md:items-end md:justify-between md:gap-6">
       <div>
         <span
             v-if="badge"
@@ -31,7 +31,7 @@ defineProps<{
 
       <div
           v-if="$slots.actions"
-          class="shrink-0"
+          class="w-full md:w-auto md:shrink-0"
       >
         <slot name="actions" />
       </div>

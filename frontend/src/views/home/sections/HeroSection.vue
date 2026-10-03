@@ -18,8 +18,8 @@ const categories = ['A', 'B', 'C', 'CE']
 </script>
 
 <template>
-  <section class="flex flex-col md:flex-row items-center gap-6 lg:gap-16 xl:justify-between pt-12">
-    <div>
+  <section class="flex flex-col items-center gap-8 pt-8 md:flex-row md:pt-12 lg:gap-16 xl:justify-between">
+    <div class="w-full md:max-w-[620px]">
       <div>
         <!-- Hero Text -->
         <h1>
@@ -33,7 +33,7 @@ const categories = ['A', 'B', 'C', 'CE']
       </div>
 
       <!-- Search box -->
-      <div class="bg-white rounded-2xl mt-8 overflow-hidden shadow-xs max-w-[420px]">
+      <div class="bg-white rounded-2xl mt-8 overflow-hidden shadow-xs w-full max-w-[420px]">
 
         <!-- Localitate -->
         <div class="px-4 py-3 flex gap-3">

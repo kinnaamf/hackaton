@@ -37,7 +37,7 @@ const steps = [
       badge="Simplu și transparent"
       title="Cum funcționează"
   >
-    <div class="grid grid-cols-3 gap-5 md:grid-cols-3">
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-5">
       <article
           v-for="step in steps"
           :key="step.id"
