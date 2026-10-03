@@ -1,90 +1,62 @@
 <script setup lang="ts">
+import { computed, onMounted, ref, watch } from 'vue'
+import { ChevronDown, LucideCircleCheck, LucideMapPin } from '@lucide/vue'
 import BaseSection from '@/components/ui/BaseSection.vue'
-import {ref} from "vue";
-import {ChevronDown, LucideCircleCheck, LucideMapPin} from "@lucide/vue";
-import type {Tab} from "@/types/tab"
-import type {SchoolCard} from "@/types/school-card";
+import { getFilters } from '@/api/dictionaries'
+import { getSchools } from '@/api/schools'
+import type { Filters } from '@/types/api'
+import type { SchoolCard } from '@/types/school-card'
+import type { Tab } from '@/types/tab'
 
-const categories = ref<string[]>(['A', 'B', 'C'])
-const years = ref<string[]>(['2026', '2025', '2024', '2023', '2026'])
-const selectedYear = ref<number>(0)
+const filters = ref<Filters | null>(null)
+const selectedCategory = ref('B')
+const selectedYear = ref<number | null>(null)
+const schools = ref<SchoolCard[]>([])
+const loading = ref(false)
 
-const tabs = ref<Tab[]>([
-  {label: 'Teorie', value: 'theory'},
-  {label: 'Practica', value: 'practice'},
-  {label: 'Prima incercare', value: 'firstTry'},
-])
-
-const activeTab = ref<Tab>(tabs.value[0]!)
-
-const schools: SchoolCard[] = [
-  {
-    id: 1,
-    name: 'Autoșcoala Vector',
-    verified: true,
-
-    city: 'Chișinău',
-    address: 'str. București 42',
-
-    categories: ['B', 'C', 'CE'],
-    hasOwnTrainingGround: true,
-
-    theoryPassRate: 78.4,
-    practicePassRate: 64.7,
-    firstTryPassRate: 58.2,
-
-    rank: 4,
-    rating: 4.6,
-    reviewsCount: 87,
-
-    candidatesCount: 284,
-    priceFrom: 7500,
-  },
-  {
-    id: 1,
-    name: 'Autoșcoala Vector',
-    verified: true,
-
-    city: 'Chișinău',
-    address: 'str. București 42',
-
-    categories: ['B', 'C', 'CE'],
-    hasOwnTrainingGround: true,
-
-    theoryPassRate: 78.4,
-    practicePassRate: 64.7,
-    firstTryPassRate: 58.2,
-
-    rank: 4,
-    rating: 4.6,
-    reviewsCount: 87,
-
-    candidatesCount: 284,
-    priceFrom: 7500,
-  },
-  {
-    id: 1,
-    name: 'Autoșcoala Vector',
-    verified: true,
-
-    city: 'Chișinău',
-    address: 'str. București 42',
-
-    categories: ['B', 'C', 'CE'],
-    hasOwnTrainingGround: true,
-
-    theoryPassRate: 78.4,
-    practicePassRate: 64.7,
-    firstTryPassRate: 58.2,
-
-    rank: 4,
-    rating: 4.6,
-    reviewsCount: 87,
-
-    candidatesCount: 284,
-    priceFrom: 7500,
-  },
+const tabs: Tab[] = [
+  { label: 'Teorie', value: 'theory' },
+  { label: 'Practica', value: 'practice' },
+  { label: 'Prima incercare', value: 'firstTry' },
 ]
+
+const activeTab = ref<Tab>(tabs[0]!)
+
+const sort = computed(() => activeTab.value.value)
+
+async function loadSchools() {
+  loading.value = true
+
+  try {
+    const response = await getSchools({
+      category: selectedCategory.value,
+      year: selectedYear.value ?? undefined,
+      sort: sort.value,
+      limit: 6,
+    })
+
+    schools.value = response.items
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(async () => {
+  filters.value = await getFilters()
+
+  selectedCategory.value = filters.value.categories.includes('B')
+      ? 'B'
+      : filters.value.categories[0] ?? ''
+
+  selectedYear.value = filters.value.years[0] ?? null
+
+  await loadSchools()
+})
+
+watch(
+    [selectedCategory, selectedYear, () => activeTab.value.value],
+    loadSchools,
+)
 </script>
 
 <template>
@@ -96,11 +68,12 @@ const schools: SchoolCard[] = [
     <template #actions>
       <div class="flex w-full flex-col gap-2 sm:flex-row sm:items-center">
         <div class="flex bg-white p-2 rounded-md gap-2">
-          <button v-for="(category, index) in categories"
-                  @click="selectedYear = index"
-                  :class="[index === selectedYear ? 'bg-purple-800 text-white  rounded-md' : '',
-                          index !== selectedYear ? 'hover:bg-purple-100' : '',]"
-                  class="w-8 h-8 rounded-md transition-all duration-200 !font-semibold"
+          <button
+              v-for="category in filters?.categories ?? []"
+              :key="category"
+              @click="selectedCategory = category"
+              :class="selectedCategory === category ? 'bg-purple-800 text-white rounded-md' : 'hover:bg-purple-100'"
+              class="w-8 h-8 rounded-md transition-all duration-200 !font-semibold"
           >
             {{ category }}
           </button>
@@ -108,9 +81,14 @@ const schools: SchoolCard[] = [
 
         <div class="relative bg-white h-12 rounded-md sm:w-32">
           <select
+              v-model="selectedYear"
               class="w-full h-full px-4 pr-10 appearance-none cursor-pointer outline-none bg-transparent"
           >
-            <option v-for="year in years" :key="year" :value="year">
+            <option
+                v-for="year in filters?.years ?? []"
+                :key="year"
+                :value="year"
+            >
               {{ year }}
             </option>
           </select>

@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { getFeatured } from '@/api/schools'
+import type { Performance } from '@/types/api'
 import { Line } from 'vue-chartjs'
 import {
   Chart as ChartJS,
@@ -23,79 +25,42 @@ ChartJS.register(
     Legend,
 )
 
-const school = {
-  name: 'Autoșcoala Vector',
-  category: 'B',
-  year: 2025,
-  rank: 4,
+const featured = ref<Performance | null>(null)
 
-  stats: {
-    theoryPassRate: 78.4,
-    practicePassRate: 64.7,
-    firstTryPracticeRate: 58.2,
-    averageAttempts: 1.7,
-  },
+const monthNames = [
+  '', 'Ian', 'Feb', 'Mar', 'Apr', 'Mai', 'Iun',
+  'Iul', 'Aug', 'Sep', 'Oct', 'Noi', 'Dec',
+]
 
-  performance: [
-    { month: 'Ian', theory: 58, practice: 42 },
-    { month: 'Feb', theory: 61, practice: 45 },
-    { month: 'Mar', theory: 64, practice: 49 },
-    { month: 'Apr', theory: 70, practice: 55 },
-    { month: 'Mai', theory: 68, practice: 53 },
-    { month: 'Iun', theory: 74, practice: 60 },
-    { month: 'Iul', theory: 71, practice: 58 },
-    { month: 'Aug', theory: 77, practice: 63 },
-    { month: 'Sep', theory: 75, practice: 61 },
-    { month: 'Oct', theory: 79, practice: 67 },
-    { month: 'Nov', theory: 78, practice: 67 },
-    { month: 'Dec', theory: 84, practice: 71 },
-  ],
-}
+onMounted(async () => {
+  featured.value = await getFeatured('B', 2025)
+})
 
 const chartData = computed(() => ({
-  labels: school.performance.map(item => item.month),
+  labels: (featured.value?.performance ?? []).map(
+      (item) => monthNames[item.month],
+  ),
 
   datasets: [
     {
       label: 'Teorie',
-      data: school.performance.map(item => item.theory),
-
+      data: (featured.value?.performance ?? []).map((item) => item.theory),
       borderColor: '#536fe8',
       backgroundColor: 'rgba(83, 111, 232, 0.08)',
-
       borderWidth: 2.5,
       tension: 0.42,
-
       fill: true,
-
       pointRadius: 0,
-      pointHitRadius: 20,
-
-      pointHoverRadius: 4,
-      pointHoverBorderWidth: 2,
-      pointHoverBackgroundColor: '#ffffff',
-      pointHoverBorderColor: '#536fe8',
     },
-
     {
       label: 'Practică',
-      data: school.performance.map(item => item.practice),
-
+      data: (featured.value?.performance ?? []).map((item) => item.practice),
       borderColor: '#74ad9c',
       backgroundColor: 'transparent',
-
       borderWidth: 2.5,
       tension: 0.42,
-
       fill: false,
-
       pointRadius: 0,
-      pointHitRadius: 20,
-
-      pointHoverRadius: 4,
-      pointHoverBorderWidth: 2,
-      pointHoverBackgroundColor: '#ffffff',
-      pointHoverBorderColor: '#74ad9c',
     },
   ],
 }))
@@ -161,29 +126,16 @@ const chartOptions: ChartOptions<'line'> = {
 
 <template>
   <div
-      class="
-      mt-8
-      w-full
-      xl:w-[640px]
-      overflow-hidden
-      rounded-[20px]
-      bg-white
-      shadow-xs
-    "
+      v-if="featured"
+      class="mt-8 w-full xl:w-[640px] overflow-hidden rounded-[20px] bg-white shadow-xs"
+
   >
     <!-- Content -->
     <div class="px-5 pt-5">
       <!-- Header -->
       <div class="flex items-start justify-between gap-4">
         <div class="min-w-0">
-          <span
-              class="
-              text-[11px]
-              font-semibold
-              uppercase
-              tracking-[0.12em]
-              text-slate-500
-            "
+          <span class=" text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500"
           >
             Exemplu de performanță
           </span>
@@ -198,11 +150,11 @@ const chartOptions: ChartOptions<'line'> = {
               text-slate-800
             "
           >
-            {{ school.name }}
+            {{ featured.name }}
           </h3>
 
           <p class="mt-1 text-[15px] text-slate-500">
-            Categoria {{ school.category }} · {{ school.year }}
+            Categoria {{ featured.category }} · {{ featured.year }}
           </p>
         </div>
 
@@ -221,7 +173,7 @@ const chartOptions: ChartOptions<'line'> = {
             text-indigo-600
           "
         >
-          #{{ school.rank }}
+          #{{ featured.rank }}
         </div>
       </div>
 
@@ -230,7 +182,7 @@ const chartOptions: ChartOptions<'line'> = {
         <!-- Theory -->
         <div class="border-r border-slate-200 pb-4 pr-4">
           <p class="text-[18px] font-bold leading-none text-slate-800">
-            {{ school.stats.theoryPassRate }}%
+            {{ featured.stats.theoryPassRate }}%
           </p>
 
           <p class="mt-2 text-[11px] leading-tight text-slate-500">
@@ -241,7 +193,7 @@ const chartOptions: ChartOptions<'line'> = {
         <!-- Practice -->
         <div class="pb-4 pl-4">
           <p class="text-[18px] font-bold leading-none text-slate-800">
-            {{ school.stats.practicePassRate }}%
+            {{ featured.stats.practicePassRate }}%
           </p>
 
           <p class="mt-2 text-[11px] leading-tight text-slate-500">
@@ -252,7 +204,7 @@ const chartOptions: ChartOptions<'line'> = {
         <!-- First try -->
         <div class="border-r border-slate-200 pr-4 pt-1">
           <p class="text-[18px] font-bold leading-none text-slate-800">
-            {{ school.stats.firstTryPracticeRate }}%
+            {{ featured.stats.practiceFirstTryRate }}%
           </p>
 
           <p class="mt-2 text-[11px] leading-tight text-slate-500">
@@ -263,7 +215,7 @@ const chartOptions: ChartOptions<'line'> = {
         <!-- Attempts -->
         <div class="pl-4 pt-1">
           <p class="text-[18px] font-bold leading-none text-slate-800">
-            {{ school.stats.averageAttempts }}
+            {{ featured.stats.averageAttempts }}
           </p>
 
           <p class="mt-2 text-[11px] leading-tight text-slate-500">

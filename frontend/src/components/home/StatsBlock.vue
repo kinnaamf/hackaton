@@ -1,4 +1,19 @@
 <script setup lang="ts">
+import { onMounted, ref, computed } from 'vue';
+import { getOverview } from '@/api/stats'
+import type { Overview } from '@/types/api'
+
+const overview = ref<Overview | null>(null)
+const loading = ref<boolean>(true)
+
+onMounted(async () => {
+  try {
+    overview.value = await getOverview()
+  } finally {
+    loading.value = false
+  }
+})
+
 import {
   Building2,
   MapPin,
@@ -6,32 +21,34 @@ import {
   ChartNoAxesColumnIncreasing
 } from '@lucide/vue'
 
-const stats = [
+const stats = computed(() => [
   {
     id: 1,
-    value: '186',
+    value: overview.value?.schoolsCount ?? '-',
     label: 'Școli auto',
     icon: Building2,
   },
   {
     id: 2,
-    value: '24',
+    value: overview.value?.localitiesCount ?? '-',
     label: 'Localități',
     icon: MapPin,
   },
   {
     id: 3,
-    value: '12 480',
+    value: overview.value?.candidatesCount?.toLocaleString('ro-MD') ?? '-',
     label: 'Candidați analizați',
     icon: Users,
   },
   {
     id: 4,
-    value: '61.8%',
+    value: overview.value?.practicePassRate != null
+        ? `${overview.value.practicePassRate}%`
+        : '-',
     label: 'Promovare practică',
     icon: ChartNoAxesColumnIncreasing,
   },
-]
+])
 </script>
 
 <template>
@@ -60,7 +77,7 @@ const stats = [
                 class="text-xl md:text-2xl font-bold
                      leading-none text-slate-900"
             >
-              {{ stat.value }}
+              {{ index === 2 ? `${stat.value}+` : stat.value}}
             </div>
 
             <div class="mt-1 text-xs text-slate-500">

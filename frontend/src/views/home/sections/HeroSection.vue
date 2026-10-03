@@ -1,20 +1,28 @@
 <script setup lang="ts">
-import {ref} from 'vue'
+import {ref, onMounted} from 'vue'
 import {MapPin, GraduationCap, Search, ArrowLeft } from '@lucide/vue'
 import PerformanceCard from "@/components/home/PerformanceCard.vue";
+import { getFilters } from "@/api/dictionaries.ts";
+import type { Filters } from "@/types/api"
 
-const location = ref('Chișinău')
+const filters = ref<Filters | null>(null)
+
+const localityId = ref<number | null>(null)
 const category = ref('B')
 
-const locations = [
-  'Chișinău',
-  'Bălți',
-  'Cahul',
-  'Orhei',
-  'Ungheni',
-]
+onMounted(async () => {
+  filters.value = await getFilters()
 
-const categories = ['A', 'B', 'C', 'CE']
+  const chisinau = filters.value.localities.find(
+      (locality) => locality.name === 'Chișinău',
+  )
+
+  localityId.value = chisinau?.id ?? filters.value.localities[0]?.id ?? null
+
+  if (!filters.value.categories.includes(category.value)) {
+    category.value = filters.value.categories[0] ?? ''
+  }
+})
 </script>
 
 <template>
@@ -49,13 +57,16 @@ const categories = ['A', 'B', 'C', 'CE']
 
             <select
                 id="location"
-                v-model="location"
+                v-model="localityId"
                 class="block w-full bg-transparent font-semibold text-zinc-800 outline-none cursor-pointer"
             >
-              <option value="Chișinău">Chișinău</option>
-              <option value="Bălți">Bălți</option>
-              <option value="Cahul">Cahul</option>
-              <option value="Orhei">Orhei</option>
+              <option
+                  v-for="locality in filters?.localities ?? []"
+                  :key="locality.id"
+                  :value="locality.id"
+              >
+                {{ locality.name }}
+              </option>
             </select>
           </div>
         </div>
@@ -76,7 +87,7 @@ const categories = ['A', 'B', 'C', 'CE']
 
             <select v-model="category" class="w-full bg-transparent outline-none">
               <option
-                  v-for="item in categories"
+                  v-for="item in filters?.categories ?? []"
                   :key="item"
                   :value="item"
               >
