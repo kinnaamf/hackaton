@@ -22,7 +22,9 @@ const tabs: Tab[] = [
 
 const activeTab = ref<Tab>(tabs[0]!)
 
-const sort = computed(() => activeTab.value.value)
+const sort = computed<'theory' | 'practice' | 'firstTry'>(
+    () => activeTab.value.value as 'theory' | 'practice' | 'firstTry',
+)
 
 async function loadSchools() {
   loading.value = true
@@ -66,37 +68,52 @@ watch(
       paragraph="Compară rezultatele pentru categoria selectată."
   >
     <template #actions>
-      <div class="flex w-full flex-col gap-2 sm:flex-row sm:items-center">
-        <div class="flex bg-white p-2 rounded-md gap-2">
-          <button
-              v-for="category in filters?.categories ?? []"
-              :key="category"
-              @click="selectedCategory = category"
-              :class="selectedCategory === category ? 'bg-purple-800 text-white rounded-md' : 'hover:bg-purple-100'"
-              class="w-8 h-8 rounded-md transition-all duration-200 !font-semibold"
-          >
-            {{ category }}
-          </button>
-        </div>
+      <div class="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 md:w-[380px]">
+        <label class="block">
+          <span class="mb-1.5 block text-xs font-medium text-slate-500">
+            După categorie
+          </span>
 
-        <div class="relative bg-white h-12 rounded-md sm:w-32">
-          <select
-              v-model="selectedYear"
-              class="w-full h-full px-4 pr-10 appearance-none cursor-pointer outline-none bg-transparent"
-          >
-            <option
-                v-for="year in filters?.years ?? []"
-                :key="year"
-                :value="year"
+          <div class="relative h-11 rounded-lg border border-slate-200 bg-white transition-colors focus-within:border-indigo-500">
+            <select
+                v-model="selectedCategory"
+                class="h-full w-full cursor-pointer appearance-none rounded-lg bg-transparent px-3 pr-10 text-sm font-semibold text-slate-800 outline-none"
             >
-              {{ year }}
-            </option>
-          </select>
+              <option
+                  v-for="category in filters?.categories ?? []"
+                  :key="category"
+                  :value="category"
+              >
+                Categoria {{ category }}
+              </option>
+            </select>
 
-          <ChevronDown
-              class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
-          />
-        </div>
+            <ChevronDown class="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-slate-500" />
+          </div>
+        </label>
+
+        <label class="block">
+          <span class="mb-1.5 block text-xs font-medium text-slate-500">
+            După an
+          </span>
+
+          <div class="relative h-11 rounded-lg border border-slate-200 bg-white transition-colors focus-within:border-indigo-500">
+            <select
+                v-model="selectedYear"
+                class="h-full w-full cursor-pointer appearance-none rounded-lg bg-transparent px-3 pr-10 text-sm font-semibold text-slate-800 outline-none"
+            >
+              <option
+                  v-for="year in filters?.years ?? []"
+                  :key="year"
+                  :value="year"
+              >
+                {{ year }}
+              </option>
+            </select>
+
+            <ChevronDown class="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-slate-500" />
+          </div>
+        </label>
       </div>
     </template>
 
