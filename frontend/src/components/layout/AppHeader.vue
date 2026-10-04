@@ -15,7 +15,7 @@ const isActive = ref(false)
 </script>
 
 <template>
-  <header class="w-full bg-white"
+  <header class="w-full bg-white px-6 md:px-8 lg:px-12"
           ref="header"
           :class="{ 'border-b border-gray-200': !isActive }"
   >

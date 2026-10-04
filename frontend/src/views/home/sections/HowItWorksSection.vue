@@ -37,7 +37,7 @@ const steps = [
       badge="Simplu și transparent"
       title="Cum funcționează"
   >
-    <div class="grid grid-cols-3 gap-5 md:grid-cols-3">
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-5">
       <article
           v-for="step in steps"
           :key="step.id"
@@ -47,7 +47,7 @@ const steps = [
         <div class="flex items-center gap-4">
           <div
               class="flex items-center justify-center
-                   rounded-lg bg-indigo-50 text-indigo-500 p-2"
+                   rounded-lg bg-purple-50 text-purple-500 p-2"
           >
             <component
                 :is="step.icon"

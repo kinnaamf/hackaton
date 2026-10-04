@@ -7,11 +7,11 @@ import HowItWorksSection from "@/views/home/sections/HowItWorksSection.vue";
 </script>
 
 <template>
-  <div class="flex flex-col gap-16">
+  <div class="flex flex-col gap-12 pb-12 md:gap-16 md:pb-16">
     <HeroSection/>
     <StatsBlock/>
     <RankingSection/>
-    <HowItWorksSection class="pb-12"/>
+    <HowItWorksSection/>
   </div>
 </template>
 

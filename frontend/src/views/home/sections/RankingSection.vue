@@ -1,90 +1,76 @@
 <script setup lang="ts">
+import { computed, onMounted, ref, watch } from 'vue'
+import { ChevronDown, LucideCircleCheck, LucideMapPin } from '@lucide/vue'
 import BaseSection from '@/components/ui/BaseSection.vue'
-import {ref} from "vue";
-import {ChevronDown, LucideCircleCheck, LucideMapPin} from "@lucide/vue";
-import type {Tab} from "@/types/tab"
-import type {SchoolCard} from "@/types/school-card";
+import { getFilters } from '@/api/dictionaries'
+import { getSchools } from '@/api/schools'
+import type { Filters } from '@/types/api'
+import type { SchoolCard } from '@/types/school-card'
+import type { Tab } from '@/types/tab'
 
-const categories = ref<string[]>(['A', 'B', 'C'])
-const years = ref<string[]>(['2026', '2025', '2024', '2023', '2026'])
-const selectedYear = ref<number>(0)
+const filters = ref<Filters | null>(null)
+const selectedCategory = ref('B')
+const selectedYear = ref<number | null>(null)
+const schools = ref<SchoolCard[]>([])
+const loading = ref(false)
+const visibleCount = ref(3)
 
-const tabs = ref<Tab[]>([
-  {label: 'Teorie', value: 'theory'},
-  {label: 'Practica', value: 'practice'},
-  {label: 'Prima incercare', value: 'firstTry'},
-])
-
-const activeTab = ref<Tab>(tabs.value[0]!)
-
-const schools: SchoolCard[] = [
-  {
-    id: 1,
-    name: 'Autoșcoala Vector',
-    verified: true,
-
-    city: 'Chișinău',
-    address: 'str. București 42',
-
-    categories: ['B', 'C', 'CE'],
-    hasOwnTrainingGround: true,
-
-    theoryPassRate: 78.4,
-    practicePassRate: 64.7,
-    firstTryPassRate: 58.2,
-
-    rank: 4,
-    rating: 4.6,
-    reviewsCount: 87,
-
-    candidatesCount: 284,
-    priceFrom: 7500,
-  },
-  {
-    id: 1,
-    name: 'Autoșcoala Vector',
-    verified: true,
-
-    city: 'Chișinău',
-    address: 'str. București 42',
-
-    categories: ['B', 'C', 'CE'],
-    hasOwnTrainingGround: true,
-
-    theoryPassRate: 78.4,
-    practicePassRate: 64.7,
-    firstTryPassRate: 58.2,
-
-    rank: 4,
-    rating: 4.6,
-    reviewsCount: 87,
-
-    candidatesCount: 284,
-    priceFrom: 7500,
-  },
-  {
-    id: 1,
-    name: 'Autoșcoala Vector',
-    verified: true,
-
-    city: 'Chișinău',
-    address: 'str. București 42',
-
-    categories: ['B', 'C', 'CE'],
-    hasOwnTrainingGround: true,
-
-    theoryPassRate: 78.4,
-    practicePassRate: 64.7,
-    firstTryPassRate: 58.2,
-
-    rank: 4,
-    rating: 4.6,
-    reviewsCount: 87,
-
-    candidatesCount: 284,
-    priceFrom: 7500,
-  },
+const tabs: Tab[] = [
+  { label: 'Teorie', value: 'theory' },
+  { label: 'Practica', value: 'practice' },
+  { label: 'Prima incercare', value: 'firstTry' },
 ]
+
+const activeTab = ref<Tab>(tabs[0]!)
+
+const sort = computed<'theory' | 'practice' | 'firstTry'>(
+    () => activeTab.value.value as 'theory' | 'practice' | 'firstTry',
+)
+
+async function loadSchools() {
+  loading.value = true
+
+  try {
+    const response = await getSchools({
+      category: selectedCategory.value,
+      year: selectedYear.value ?? undefined,
+      sort: sort.value,
+      limit: 6,
+    })
+
+    schools.value = response.items
+  } finally {
+    loading.value = false
+  }
+}
+
+function showMore() {
+  visibleCount.value += 3
+}
+
+function formatPercent(value: number) {
+  return `${Math.round(value)}%`
+}
+
+onMounted(async () => {
+  filters.value = await getFilters()
+
+  selectedCategory.value = filters.value.categories.includes('B')
+      ? 'B'
+      : filters.value.categories[0] ?? ''
+
+  selectedYear.value = filters.value.years[0] ?? null
+
+  await loadSchools()
+})
+
+watch(
+    [selectedCategory, selectedYear, () => activeTab.value.value],
+    () => {
+      visibleCount.value = 3
+      void loadSchools()
+    },
+)
 </script>
 
 <template>
@@ -94,61 +80,77 @@ const schools: SchoolCard[] = [
       paragraph="Compară rezultatele pentru categoria selectată."
   >
     <template #actions>
-      <div class="flex items-center gap-2">
-        <div class="flex bg-white p-2 rounded-md gap-2">
-          <button v-for="(category, index) in categories"
-                  @click="selectedYear = index"
-                  :class="[index === selectedYear ? 'bg-purple-800 text-white  rounded-md' : '',
-                          index !== selectedYear ? 'hover:bg-purple-100' : '',]"
-                  class="w-8 h-8 rounded-md transition-all duration-200 !font-semibold"
-          >
-            {{ category }}
-          </button>
-        </div>
+      <div class="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 md:w-[380px]">
+        <label class="block">
+          <span class="mb-1.5 block text-xs font-medium text-slate-500">
+            După categorie
+          </span>
 
-        <div class="relative bg-white h-12 rounded-md">
-          <select
-              class="w-full h-full px-4 pr-10 appearance-none cursor-pointer outline-none bg-transparent"
-          >
-            <option v-for="year in years" :key="year" :value="year">
-              {{ year }}
-            </option>
-          </select>
+          <div class="relative h-11 rounded-lg border border-slate-200 bg-white transition-colors focus-within:border-indigo-500">
+            <select
+                v-model="selectedCategory"
+                class="h-full w-full cursor-pointer appearance-none rounded-lg bg-transparent px-3 pr-10 text-sm font-semibold text-slate-800 outline-none"
+            >
+              <option
+                  v-for="category in filters?.categories ?? []"
+                  :key="category"
+                  :value="category"
+              >
+                Categoria {{ category }}
+              </option>
+            </select>
 
-          <ChevronDown
-              class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none"
-          />
-        </div>
+            <ChevronDown class="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-slate-500" />
+          </div>
+        </label>
+
+        <label class="block">
+          <span class="mb-1.5 block text-xs font-medium text-slate-500">
+            După an
+          </span>
+
+          <div class="relative h-11 rounded-lg border border-slate-200 bg-white transition-colors focus-within:border-indigo-500">
+            <select
+                v-model="selectedYear"
+                class="h-full w-full cursor-pointer appearance-none rounded-lg bg-transparent px-3 pr-10 text-sm font-semibold text-slate-800 outline-none"
+            >
+              <option
+                  v-for="year in filters?.years ?? []"
+                  :key="year"
+                  :value="year"
+              >
+                {{ year }}
+              </option>
+            </select>
+
+            <ChevronDown class="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-slate-500" />
+          </div>
+        </label>
       </div>
     </template>
 
-    <div class="border-b border-slate-200">
-      <div class="flex gap-7">
+    <div class="border-b border-slate-200 pb-3">
+      <div class="flex w-max min-w-full gap-1 overflow-x-auto rounded-xl bg-white p-1 sm:min-w-0">
         <button
             v-for="tab in tabs"
             :key="tab.value"
             type="button"
-            class="relative pb-3 text-sm font-semibold transition-colors duration-200 cursor-pointer"
+            class="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold transition-all duration-200"
             :class="
           activeTab === tab
-            ? 'text-indigo-600'
-            : 'text-slate-500 hover:text-slate-800'
+            ? 'bg-purple-800 text-white shadow-sm'
+            : 'text-slate-500 hover:bg-purple-50 hover:text-purple-800'
         "
             @click="activeTab = tab"
         >
           {{ tab.label }}
-
-          <span
-              v-if="activeTab === tab"
-              class="absolute -bottom-px left-0 h-0.5 w-full bg-indigo-600"
-          />
         </button>
       </div>
     </div>
 
     <!-- Cards section -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mt-8 gap-4">
-      <div v-for="school in schools" class="bg-white rounded-2xl p-4 shadow-xs">
+    <TransitionGroup name="school-card" tag="div" class="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div v-for="school in schools.slice(0, visibleCount)" :key="school.id" class="bg-white rounded-2xl p-4 shadow-xs">
         <!-- Card header -->
         <div class="flex gap-2 items-center">
           <span class="text-[17px] font-medium">{{ school.name }}</span>
@@ -186,7 +188,7 @@ const schools: SchoolCard[] = [
                 </span>
 
                 <span class="text-xs font-bold text-slate-800">
-                  {{ school.theoryPassRate }}%
+                  {{ formatPercent(school.theoryPassRate) }}
                 </span>
               </div>
 
@@ -206,7 +208,7 @@ const schools: SchoolCard[] = [
                 </span>
 
                 <span class="text-xs font-bold text-slate-800">
-                  {{ school.practicePassRate }}%
+                  {{ formatPercent(school.practicePassRate) }}
                 </span>
               </div>
 
@@ -226,7 +228,7 @@ const schools: SchoolCard[] = [
                 </span>
 
                 <span class="text-xs font-bold text-slate-800">
-                  {{ school.firstTryPassRate }}%
+                  {{ formatPercent(school.firstTryPassRate) }}
                 </span>
               </div>
 
@@ -303,6 +305,42 @@ const schools: SchoolCard[] = [
           </RouterLink>
         </div>
       </div>
+    </TransitionGroup>
+
+    <div v-if="schools.length" class="mt-8 flex justify-center">
+      <button
+          v-if="visibleCount < schools.length"
+          type="button"
+          class="inline-flex h-11 items-center justify-center rounded-lg border border-purple-800 px-5 text-sm font-semibold text-purple-800 transition-all duration-200 hover:bg-purple-50"
+          @click="showMore"
+      >
+        Mai multe
+      </button>
+
+      <RouterLink
+          v-else
+          :to="{
+            path: '/schools',
+            query: {
+              sort: 'practice',
+              minimumPracticeRate: 70,
+            },
+          }"
+          class="inline-flex h-11 items-center justify-center rounded-lg bg-purple-800 px-5 text-sm font-semibold !text-white transition-all duration-200 hover:bg-purple-900"
+      >
+        Arată toate
+      </RouterLink>
     </div>
   </BaseSection>
 </template>
+
+<style scoped>
+.school-card-enter-active {
+  transition: opacity 360ms ease, transform 360ms ease;
+}
+
+.school-card-enter-from {
+  opacity: 0;
+  transform: translateY(20px) scale(0.98);
+}
+</style>

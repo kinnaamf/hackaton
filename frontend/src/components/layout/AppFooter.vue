@@ -33,7 +33,7 @@ const currentYear = new Date().getFullYear()
 </script>
 
 <template>
-  <footer class="border-t border-slate-200 bg-white pt-12 pb-6 px-6">
+  <footer class="border-t border-slate-200 bg-white pt-12 pb-6 px-6 md:px-8 lg:px-12">
     <div class="mx-auto max-w-[1440px]">
 
       <!-- Main footer -->

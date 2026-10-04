@@ -1,25 +1,33 @@
 <script setup lang="ts">
-import {ref} from 'vue'
+import {ref, onMounted} from 'vue'
 import {MapPin, GraduationCap, Search, ArrowLeft } from '@lucide/vue'
 import PerformanceCard from "@/components/home/PerformanceCard.vue";
+import { getFilters } from "@/api/dictionaries.ts";
+import type { Filters } from "@/types/api"
 
-const location = ref('Chișinău')
+const filters = ref<Filters | null>(null)
+
+const localityId = ref<number | null>(null)
 const category = ref('B')
 
-const locations = [
-  'Chișinău',
-  'Bălți',
-  'Cahul',
-  'Orhei',
-  'Ungheni',
-]
+onMounted(async () => {
+  filters.value = await getFilters()
 
-const categories = ['A', 'B', 'C', 'CE']
+  const chisinau = filters.value.localities.find(
+      (locality) => locality.name === 'Chișinău',
+  )
+
+  localityId.value = chisinau?.id ?? filters.value.localities[0]?.id ?? null
+
+  if (!filters.value.categories.includes(category.value)) {
+    category.value = filters.value.categories[0] ?? ''
+  }
+})
 </script>
 
 <template>
-  <section class="flex flex-col md:flex-row items-center gap-6 lg:gap-16 xl:justify-between pt-12">
-    <div>
+  <section class="flex flex-col items-center gap-8 pt-8 md:flex-row md:pt-12 lg:gap-16 xl:justify-between">
+    <div class="w-full md:max-w-[620px]">
       <div>
         <!-- Hero Text -->
         <h1>
@@ -33,7 +41,7 @@ const categories = ['A', 'B', 'C', 'CE']
       </div>
 
       <!-- Search box -->
-      <div class="bg-white rounded-2xl mt-8 overflow-hidden shadow-xs max-w-[420px]">
+      <div class="bg-white rounded-2xl mt-8 overflow-hidden shadow-xs w-full max-w-[420px]">
 
         <!-- Localitate -->
         <div class="px-4 py-3 flex gap-3">
@@ -49,13 +57,16 @@ const categories = ['A', 'B', 'C', 'CE']
 
             <select
                 id="location"
-                v-model="location"
+                v-model="localityId"
                 class="block w-full bg-transparent font-semibold text-zinc-800 outline-none cursor-pointer"
             >
-              <option value="Chișinău">Chișinău</option>
-              <option value="Bălți">Bălți</option>
-              <option value="Cahul">Cahul</option>
-              <option value="Orhei">Orhei</option>
+              <option
+                  v-for="locality in filters?.localities ?? []"
+                  :key="locality.id"
+                  :value="locality.id"
+              >
+                {{ locality.name }}
+              </option>
             </select>
           </div>
         </div>
@@ -76,7 +87,7 @@ const categories = ['A', 'B', 'C', 'CE']
 
             <select v-model="category" class="w-full bg-transparent outline-none">
               <option
-                  v-for="item in categories"
+                  v-for="item in filters?.categories ?? []"
                   :key="item"
                   :value="item"
               >
@@ -86,15 +97,23 @@ const categories = ['A', 'B', 'C', 'CE']
           </div>
         </div>
         <div class="px-2 pb-2">
-          <button
-              class="flex justify-center py-2.5 items-center gap-2 bg-purple-800 hover:bg-purple-900 transition-all duration-200 w-full text-white rounded-xl">
+          <RouterLink
+              :to="{
+                path: '/schools',
+                query: {
+                  category,
+                  ...(localityId ? { localityId } : {}),
+                },
+              }"
+              class="flex w-full items-center justify-center gap-2 rounded-xl bg-purple-800 py-2.5 !text-white transition-all duration-200 hover:bg-purple-900"
+          >
             <Search class="w-[18px] h-[18px]"/>
             <span class="font-medium">Caută școli</span>
-          </button>
+          </RouterLink>
         </div>
       </div>
       <RouterLink
-          to=""
+          to="/schools"
           class="mt-6 flex items-center gap-1">
         <span class="text-sm text-purple-800 font-semibold">Vezi toate scolile</span>
         <ArrowLeft class="h-4 w-4 rotate-180 stroke-purple-800"/>
