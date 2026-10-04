@@ -1,11 +1,15 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { CheckCircle2, ChevronDown, MapPin, Search } from '@lucide/vue'
+import { useRoute } from 'vue-router'
 import { getFilters } from '@/api/dictionaries'
 import { getSchoolLocation, getSchools, type SchoolLocation } from '@/api/schools'
 import type { Filters } from '@/types/api'
+import { schoolProfilePath } from '@/utils/school'
+
+const route = useRoute()
 
 const mapElement = ref<HTMLElement | null>(null)
 const map = ref<any>(null)
@@ -20,6 +24,10 @@ const selectedId = ref<number | null>(null)
 const loading = ref(false)
 
 const selectedSchool = computed(() => schools.value.find((school) => school.id === selectedId.value) ?? null)
+
+function percent(value: number | null | undefined) {
+  return Number.isFinite(value) ? `${Math.round(value!)}%` : '—'
+}
 
 function initMap() {
   if (!mapElement.value || map.value) return
@@ -57,10 +65,10 @@ function renderMarkers() {
 
 function selectSchool(school: SchoolLocation) {
   selectedId.value = school.id
-  if (map.value && school.latitude != null && school.longitude != null) {
-    map.value.panTo([school.latitude, school.longitude])
-  }
   renderMarkers()
+  if (map.value && school.latitude != null && school.longitude != null) {
+    map.value.setView([school.latitude, school.longitude], 15)
+  }
 }
 
 async function loadSchools() {
@@ -74,9 +82,12 @@ async function loadSchools() {
       limit: 100,
     })
     schools.value = (await Promise.all(response.items.map((school) => getSchoolLocation(school.id))))
-    selectedId.value = schools.value[0]?.id ?? null
+    const requestedId = typeof route.query.school === 'string' ? Number(route.query.school) : NaN
+    selectedId.value = schools.value.find((school) => school.id === requestedId)?.id ?? schools.value[0]?.id ?? null
     await nextTick()
     renderMarkers()
+    const selected = schools.value.find((school) => school.id === selectedId.value)
+    if (selected && Number.isFinite(requestedId)) selectSchool(selected)
   } finally {
     loading.value = false
   }
@@ -90,6 +101,11 @@ onMounted(async () => {
 })
 
 onBeforeUnmount(() => map.value?.remove())
+
+watch(() => route.query.school, (schoolId) => {
+  const school = schools.value.find((item) => item.id === Number(schoolId))
+  if (school) selectSchool(school)
+})
 </script>
 
 <template>
@@ -112,9 +128,9 @@ onBeforeUnmount(() => map.value?.remove())
         <p class="mt-5 text-xs text-slate-500">{{ loading ? 'Se încarcă…' : `${schools.length} rezultate` }}</p>
         <div class="mt-2 max-h-[430px] space-y-1 overflow-y-auto pr-1">
           <button v-for="school in schools" :key="school.id" type="button" class="w-full rounded-lg border-l-4 p-3 text-left transition-colors" :class="school.id === selectedId ? 'border-purple-800 bg-purple-50' : 'border-transparent hover:bg-slate-50'" @click="selectSchool(school)">
-            <div class="flex items-center gap-1.5 text-sm font-semibold text-slate-800">{{ school.name }}<CheckCircle2 v-if="school.verified" class="size-3.5 text-emerald-600" /></div>
-            <p class="mt-1 flex items-center gap-1 text-xs text-slate-500"><MapPin class="size-3.5" />{{ school.city }} · Practică {{ Math.round(school.practicePassRate) }}%</p>
-            <p class="mt-1 pl-4 text-xs font-semibold text-slate-600">{{ school.priceFrom?.toLocaleString('ro-MD') ?? '—' }} MDL</p>
+            <div class="flex items-center gap-1.5 text-sm font-semibold text-slate-800"><RouterLink :to="schoolProfilePath(school)" class="hover:text-purple-800">{{ school.name }}</RouterLink><CheckCircle2 v-if="school.verified" class="size-3.5 text-emerald-600" /></div>
+            <p class="mt-1 flex items-center gap-1 text-xs text-slate-500"><MapPin class="size-3.5" />{{ school.city }} · Practică {{ percent(school.practicePassRate) }}</p>
+            <p class="mt-1 pl-4 text-xs font-bold text-purple-800">De la {{ Number.isFinite(school.priceFrom) ? school.priceFrom.toLocaleString('ro-MD') : '—' }} MDL</p>
           </button>
         </div>
       </aside>
@@ -122,9 +138,9 @@ onBeforeUnmount(() => map.value?.remove())
       <div class="relative min-h-[460px]">
         <div ref="mapElement" class="absolute inset-0"></div>
         <div v-if="selectedSchool" class="absolute bottom-4 left-4 z-[500] max-w-xs rounded-xl bg-white p-4 shadow-lg">
-          <div class="flex items-start justify-between gap-3"><div><h2 class="font-semibold text-slate-800">{{ selectedSchool.name }}</h2><p class="mt-1 text-xs text-slate-500">Categoria {{ category }} · {{ selectedSchool.city }}</p></div><CheckCircle2 v-if="selectedSchool.verified" class="size-4 text-emerald-600" /></div>
-          <div class="mt-4 flex gap-5 text-sm"><span><strong class="text-purple-800">{{ Math.round(selectedSchool.practicePassRate) }}%</strong> practică</span><span><strong>{{ selectedSchool.priceFrom?.toLocaleString('ro-MD') ?? '—' }}</strong> MDL</span></div>
-          <RouterLink :to="`/schools/${selectedSchool.id}`" class="mt-4 inline-block text-sm font-semibold text-purple-800 hover:text-purple-900">Vezi profilul →</RouterLink>
+          <div class="flex items-start justify-between gap-3"><div><h2 class="font-semibold text-slate-800"><RouterLink :to="schoolProfilePath(selectedSchool)" class="hover:text-purple-800">{{ selectedSchool.name }}</RouterLink></h2><p class="mt-1 text-xs text-slate-500">Categoria {{ category }} · {{ selectedSchool.city }}</p></div><CheckCircle2 v-if="selectedSchool.verified" class="size-4 text-emerald-600" /></div>
+          <div class="mt-4 flex gap-5 text-sm"><span><strong class="text-purple-800">{{ percent(selectedSchool.practicePassRate) }}</strong> practică</span><span><strong>{{ selectedSchool.priceFrom?.toLocaleString('ro-MD') ?? '—' }}</strong> MDL</span></div>
+          <RouterLink :to="schoolProfilePath(selectedSchool)" class="mt-4 inline-block text-sm font-semibold text-purple-800 hover:text-purple-900">Vezi profilul →</RouterLink>
         </div>
       </div>
     </div>

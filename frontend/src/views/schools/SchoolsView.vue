@@ -7,6 +7,7 @@ import type { SchoolFilters } from '@/components/schools/FiltersAside.vue'
 import { getSchools } from '@/api/schools'
 import { addSchoolToCompare, comparedSchools } from '@/stores/compare'
 import type { SchoolCard } from '@/types/school-card'
+import { schoolProfilePath } from '@/utils/school'
 import TitleSection from '@/views/schools/sections/TitleSection.vue'
 
 const route = useRoute()
@@ -87,8 +88,8 @@ function addToCompare(school: SchoolCard) {
   }
 }
 
-function formatPercent(value: number) {
-  return `${Math.round(value)}%`
+function formatPercent(value: number | null | undefined) {
+  return Number.isFinite(value) ? `${Math.round(value!)}%` : '—'
 }
 
 onMounted(loadSchools)
@@ -130,16 +131,16 @@ watch(sort, () => {
             <div class="grid gap-6 md:grid-cols-[minmax(0,1.1fr)_minmax(245px,1fr)_145px]">
               <div class="min-w-0">
                 <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
-                  <h2 class="text-lg font-medium text-slate-800">{{ school.name }}</h2>
+                  <h2 class="text-lg font-medium text-slate-800"><RouterLink :to="schoolProfilePath(school)" class="transition-colors hover:text-purple-800">{{ school.name }}</RouterLink></h2>
                   <span v-if="school.verified" class="inline-flex items-center gap-1 text-xs font-medium text-emerald-600">
                     <CheckCircle2 class="size-3.5" /> Date verificate
                   </span>
                 </div>
 
-                <p class="mt-3 flex items-center gap-2 text-sm text-slate-500">
+                <RouterLink :to="{ path: '/map', query: { school: String(school.id) } }" class="mt-3 flex items-center gap-2 text-sm text-slate-500 transition-colors hover:text-purple-800">
                   <MapPin class="size-4 shrink-0" />
                   <span>{{ school.city }}, {{ school.address }}</span>
-                </p>
+                </RouterLink>
 
                 <div class="mt-4 flex flex-wrap gap-2">
                   <span v-for="item in school.categories" :key="item" class="rounded-md bg-purple-50 px-2.5 py-1 text-xs font-bold text-purple-800">{{ item }}</span>
@@ -167,7 +168,7 @@ watch(sort, () => {
             </div>
 
             <div class="mt-5 flex flex-wrap gap-2 border-t border-slate-100 pt-4 md:justify-end">
-              <RouterLink :to="`/schools/${school.id}`" class="inline-flex h-10 items-center justify-center rounded-lg bg-purple-800 px-4 text-sm font-semibold !text-white hover:bg-purple-900 transition-all duration-200">Vezi profilul</RouterLink>
+              <RouterLink :to="schoolProfilePath(school)" class="inline-flex h-10 items-center justify-center rounded-lg bg-purple-800 px-4 text-sm font-semibold !text-white hover:bg-purple-900 transition-all duration-200">Vezi profilul</RouterLink>
               <button type="button" class="inline-flex h-10 items-center justify-center rounded-lg border border-slate-700 px-4 text-sm font-semibold text-slate-700 transition-all duration-200 hover:bg-slate-50" @click="addToCompare(school)">
                 {{ comparedSchools.some((item) => item.id === school.id) ? 'Adăugată' : '+ Compară' }}
               </button>

@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { getFeatured } from '@/api/schools'
 import type { Performance } from '@/types/api'
+import { schoolProfilePath } from '@/utils/school'
 import { Line } from 'vue-chartjs'
 import {
   Chart as ChartJS,
@@ -150,7 +151,7 @@ const chartOptions: ChartOptions<'line'> = {
               text-slate-800
             "
           >
-            {{ featured.name }}
+            <RouterLink :to="schoolProfilePath({ id: featured.schoolId, name: featured.name })" class="hover:text-purple-800">{{ featured.name }}</RouterLink>
           </h3>
 
           <p class="mt-1 text-[15px] text-slate-500">

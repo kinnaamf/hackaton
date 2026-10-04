@@ -200,12 +200,12 @@
               </td>
 
               <td>
-                <a
+                <RouterLink
                     class="table-link"
-                    :href="`/schools/${school.id}`"
+                    :to="schoolProfilePath(school)"
                 >
                   {{ school.name }}
-                </a>
+                </RouterLink>
               </td>
 
               <td>{{ school.city }}</td>
@@ -236,6 +236,7 @@ import { getFeatured, getSchools } from '@/api/schools'
 import { getOverview } from '@/api/stats'
 import type { Filters, Overview, Performance } from '@/types/api'
 import type { SchoolCard } from '@/types/school-card'
+import { schoolProfilePath } from '@/utils/school'
 
 /* -----------------------------
    Navigation
@@ -274,7 +275,7 @@ const overviewStats = computed(() => [
 ])
 
 function formatPercent(value: number | null | undefined) {
-  return value == null ? '—' : `${Math.round(value)}%`
+  return Number.isFinite(value) ? `${Math.round(value!)}%` : '—'
 }
 
 const monthlyPoints = computed(() => featuredPerformance.value?.performance ?? [])
