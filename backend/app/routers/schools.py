@@ -232,7 +232,17 @@ def get_school(school_id: int, db: Session = Depends(get_db)):
                    (SELECT count(*) FROM instructori i
                      WHERE i.school_id = s.school_id AND i.is_active) AS instructors_count,
                    (SELECT count(*) FROM vehicule v
-                     WHERE v.school_id = s.school_id AND v.is_active) AS vehicles_count
+                     WHERE v.school_id = s.school_id AND v.is_active) AS vehicles_count,
+                   (SELECT min(c.price)
+                      FROM categorii_scoli_auto c
+                     WHERE c.school_id = s.school_id AND c.is_active) AS price_from,
+                   (SELECT st.practice_pass_rate
+                      FROM statistici_scoli_perioade st
+                     WHERE st.school_id = s.school_id
+                       AND st.category_code = 'B'
+                       AND st.period_month = 0
+                     ORDER BY st.period_year DESC
+                     LIMIT 1) AS practice_pass_rate
             FROM scoli_auto s
             LEFT JOIN localitati l ON l.locality_id = s.locality_id
             LEFT JOIN raioane r ON r.district_id = l.district_id

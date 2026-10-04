@@ -139,6 +139,8 @@ class SchoolDetail(ApiModel):
     has_own_training_ground: bool
     instructors_count: int
     vehicles_count: int
+    price_from: float | None
+    practice_pass_rate: float | None
 
     categories: list[SchoolCategory]
     branches: list[Branch]
