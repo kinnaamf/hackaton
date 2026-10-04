@@ -97,15 +97,23 @@ onMounted(async () => {
           </div>
         </div>
         <div class="px-2 pb-2">
-          <button
-              class="flex justify-center py-2.5 items-center gap-2 bg-purple-800 hover:bg-purple-900 transition-all duration-200 w-full text-white rounded-xl">
+          <RouterLink
+              :to="{
+                path: '/schools',
+                query: {
+                  category,
+                  ...(localityId ? { localityId } : {}),
+                },
+              }"
+              class="flex w-full items-center justify-center gap-2 rounded-xl bg-purple-800 py-2.5 !text-white transition-all duration-200 hover:bg-purple-900"
+          >
             <Search class="w-[18px] h-[18px]"/>
             <span class="font-medium">Caută școli</span>
-          </button>
+          </RouterLink>
         </div>
       </div>
       <RouterLink
-          to=""
+          to="/schools"
           class="mt-6 flex items-center gap-1">
         <span class="text-sm text-purple-800 font-semibold">Vezi toate scolile</span>
         <ArrowLeft class="h-4 w-4 rotate-180 stroke-purple-800"/>

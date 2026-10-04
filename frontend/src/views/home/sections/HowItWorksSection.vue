@@ -47,7 +47,7 @@ const steps = [
         <div class="flex items-center gap-4">
           <div
               class="flex items-center justify-center
-                   rounded-lg bg-indigo-50 text-indigo-500 p-2"
+                   rounded-lg bg-purple-50 text-purple-500 p-2"
           >
             <component
                 :is="step.icon"

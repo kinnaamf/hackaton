@@ -68,7 +68,7 @@ const stats = computed(() => [
         >
           <component
               :is="stat.icon"
-              class="w-5 h-5 shrink-0 text-indigo-500"
+              class="w-5 h-5 shrink-0 text-purple-700"
               :stroke-width="1.7"
           />
 

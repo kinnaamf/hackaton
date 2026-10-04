@@ -12,7 +12,7 @@ defineProps<{
       <div>
         <span
             v-if="badge"
-            class="text-xs font-semibold uppercase tracking-wider text-indigo-600"
+            class="text-xs font-semibold uppercase tracking-wider text-purple-800"
         >
           {{ badge }}
         </span>

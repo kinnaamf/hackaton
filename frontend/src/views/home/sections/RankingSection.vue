@@ -13,6 +13,7 @@ const selectedCategory = ref('B')
 const selectedYear = ref<number | null>(null)
 const schools = ref<SchoolCard[]>([])
 const loading = ref(false)
+const visibleCount = ref(3)
 
 const tabs: Tab[] = [
   { label: 'Teorie', value: 'theory' },
@@ -43,6 +44,14 @@ async function loadSchools() {
   }
 }
 
+function showMore() {
+  visibleCount.value += 3
+}
+
+function formatPercent(value: number) {
+  return `${Math.round(value)}%`
+}
+
 onMounted(async () => {
   filters.value = await getFilters()
 
@@ -57,7 +66,10 @@ onMounted(async () => {
 
 watch(
     [selectedCategory, selectedYear, () => activeTab.value.value],
-    loadSchools,
+    () => {
+      visibleCount.value = 3
+      void loadSchools()
+    },
 )
 </script>
 
@@ -117,33 +129,28 @@ watch(
       </div>
     </template>
 
-    <div class="border-b border-slate-200">
-      <div class="flex gap-7">
+    <div class="border-b border-slate-200 pb-3">
+      <div class="flex w-max min-w-full gap-1 overflow-x-auto rounded-xl bg-white p-1 sm:min-w-0">
         <button
             v-for="tab in tabs"
             :key="tab.value"
             type="button"
-            class="relative pb-3 text-sm font-semibold transition-colors duration-200 cursor-pointer"
+            class="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold transition-all duration-200"
             :class="
           activeTab === tab
-            ? 'text-indigo-600'
-            : 'text-slate-500 hover:text-slate-800'
+            ? 'bg-purple-800 text-white shadow-sm'
+            : 'text-slate-500 hover:bg-purple-50 hover:text-purple-800'
         "
             @click="activeTab = tab"
         >
           {{ tab.label }}
-
-          <span
-              v-if="activeTab === tab"
-              class="absolute -bottom-px left-0 h-0.5 w-full bg-indigo-600"
-          />
         </button>
       </div>
     </div>
 
     <!-- Cards section -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mt-8 gap-4">
-      <div v-for="school in schools" class="bg-white rounded-2xl p-4 shadow-xs">
+    <TransitionGroup name="school-card" tag="div" class="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div v-for="school in schools.slice(0, visibleCount)" :key="school.id" class="bg-white rounded-2xl p-4 shadow-xs">
         <!-- Card header -->
         <div class="flex gap-2 items-center">
           <span class="text-[17px] font-medium">{{ school.name }}</span>
@@ -181,7 +188,7 @@ watch(
                 </span>
 
                 <span class="text-xs font-bold text-slate-800">
-                  {{ school.theoryPassRate }}%
+                  {{ formatPercent(school.theoryPassRate) }}
                 </span>
               </div>
 
@@ -201,7 +208,7 @@ watch(
                 </span>
 
                 <span class="text-xs font-bold text-slate-800">
-                  {{ school.practicePassRate }}%
+                  {{ formatPercent(school.practicePassRate) }}
                 </span>
               </div>
 
@@ -221,7 +228,7 @@ watch(
                 </span>
 
                 <span class="text-xs font-bold text-slate-800">
-                  {{ school.firstTryPassRate }}%
+                  {{ formatPercent(school.firstTryPassRate) }}
                 </span>
               </div>
 
@@ -298,6 +305,42 @@ watch(
           </RouterLink>
         </div>
       </div>
+    </TransitionGroup>
+
+    <div v-if="schools.length" class="mt-8 flex justify-center">
+      <button
+          v-if="visibleCount < schools.length"
+          type="button"
+          class="inline-flex h-11 items-center justify-center rounded-lg border border-purple-800 px-5 text-sm font-semibold text-purple-800 transition-all duration-200 hover:bg-purple-50"
+          @click="showMore"
+      >
+        Mai multe
+      </button>
+
+      <RouterLink
+          v-else
+          :to="{
+            path: '/schools',
+            query: {
+              sort: 'practice',
+              minimumPracticeRate: 70,
+            },
+          }"
+          class="inline-flex h-11 items-center justify-center rounded-lg bg-purple-800 px-5 text-sm font-semibold !text-white transition-all duration-200 hover:bg-purple-900"
+      >
+        Arată toate
+      </RouterLink>
     </div>
   </BaseSection>
 </template>
+
+<style scoped>
+.school-card-enter-active {
+  transition: opacity 360ms ease, transform 360ms ease;
+}
+
+.school-card-enter-from {
+  opacity: 0;
+  transform: translateY(20px) scale(0.98);
+}
+</style>

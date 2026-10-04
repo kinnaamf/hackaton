@@ -159,19 +159,7 @@ const chartOptions: ChartOptions<'line'> = {
         </div>
 
         <div
-            class="
-            flex
-            h-9
-            shrink-0
-            items-center
-            justify-center
-            rounded-lg
-            bg-indigo-50
-            px-3
-            text-sm
-            font-bold
-            text-indigo-600
-          "
+            class="flex h-9 shrink-0 items-center justify-center rounded-lg bg-purple-50 px-3 text-sm font-bold text-purple-800"
         >
           #{{ featured.rank }}
         </div>
