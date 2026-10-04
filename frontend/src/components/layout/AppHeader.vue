@@ -24,7 +24,7 @@ const isActive = ref(false)
     >
       <RouterLink to="/">
         <img
-            src="/logo.png"
+            src="/logo.webp"
             alt="Logo"
             class="h-12 w-40 object-cover"
         >
