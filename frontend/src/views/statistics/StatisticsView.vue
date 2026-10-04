@@ -127,7 +127,7 @@
 
         <!-- FREQUENT ERRORS -->
         <div class="data-card">
-          <p class="eyebrow">Date demonstrative</p>
+          <p class="eyebrow">Examen practic · categoria {{ selectedCategory }}</p>
 
           <h2>Greșeli frecvente</h2>
 
@@ -233,8 +233,8 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { ChevronDown } from '@lucide/vue'
 import { getFilters } from '@/api/dictionaries'
 import { getFeatured, getSchools } from '@/api/schools'
-import { getOverview } from '@/api/stats'
-import type { Filters, Overview, Performance } from '@/types/api'
+import { getFrequentErrors, getOverview } from '@/api/stats'
+import type { Filters, FrequentErrors, Overview, Performance } from '@/types/api'
 import type { SchoolCard } from '@/types/school-card'
 import { schoolProfilePath } from '@/utils/school'
 
@@ -265,6 +265,7 @@ const selectedCategory = ref('B')
 const overviewData = ref<Overview | null>(null)
 const schools = ref<SchoolCard[]>([])
 const featuredPerformance = ref<Performance | null>(null)
+const frequentErrorsData = ref<FrequentErrors | null>(null)
 
 const overviewStats = computed(() => [
   [overviewData.value?.schoolsCount?.toLocaleString('ro-MD') ?? '—', 'Școli auto'],
@@ -299,15 +300,17 @@ const theoryPath = computed(() => chartPath('theory'))
 const practicePath = computed(() => chartPath('practice'))
 
 async function loadStatistics() {
-  const [overview, ranking, featured] = await Promise.all([
+  const [overview, ranking, featured, errors] = await Promise.all([
     getOverview(selectedYear.value ?? undefined),
     getSchools({ category: selectedCategory.value, year: selectedYear.value ?? undefined, sort: 'rank', limit: 20 }),
     getFeatured(selectedCategory.value, selectedYear.value ?? undefined),
+    getFrequentErrors(selectedCategory.value, selectedYear.value ?? undefined),
   ])
 
   overviewData.value = overview
   schools.value = ranking.items
   featuredPerformance.value = featured
+  frequentErrorsData.value = errors
 }
 
 onMounted(async () => {
@@ -328,12 +331,16 @@ watch([selectedYear, selectedCategory], () => void loadStatistics())
    Frequent errors
 ----------------------------- */
 
-const frequentErrors = [
-  ['Neacordarea priorității', 1284, 34],
-  ['Parcare necorespunzătoare', 967, 26],
-  ['Depășirea vitezei', 742, 20],
-  ['Semnalizare incorectă', 538, 14],
-]
+// Bars are scaled to the most frequent error
+const frequentErrors = computed(() => {
+  const items = frequentErrorsData.value?.items ?? []
+  const top = Math.max(...items.map((item) => item.count), 1)
+  return items.map((item) => [
+    item.description,
+    item.count.toLocaleString('ro-MD'),
+    Math.round((item.count / top) * 100),
+  ] as const)
+})
 
 /* -----------------------------
    Table

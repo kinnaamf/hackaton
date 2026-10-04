@@ -7,6 +7,25 @@ export interface Overview {
     practicePassRate: number | null
 }
 
+export interface FrequentError {
+    description: string
+    practiceType: string | null
+    points: number
+    isEliminatory: boolean
+    count: number
+    percent: number
+    attemptsPercent: number
+}
+
+export interface FrequentErrors {
+    year: number | null
+    category: string | null
+    schoolId: number | null
+    attemptsCount: number
+    penaltiesCount: number
+    items: FrequentError[]
+}
+
 export interface Filters {
     localities: Array<{
         id: number

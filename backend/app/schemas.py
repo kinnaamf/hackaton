@@ -43,6 +43,25 @@ class Overview(ApiModel):
     practice_pass_rate: float | None
 
 
+class FrequentError(ApiModel):
+    description: str
+    practice_type: str | None
+    points: int
+    is_eliminatory: bool
+    count: int
+    percent: float
+    attempts_percent: float
+
+
+class FrequentErrors(ApiModel):
+    year: int | None
+    category: str | None
+    school_id: int | None
+    attempts_count: int
+    penalties_count: int
+    items: list[FrequentError]
+
+
 # --- Schools --------------------------------------------------------------
 
 class SchoolCard(ApiModel):

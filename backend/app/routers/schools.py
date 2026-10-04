@@ -5,7 +5,8 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.schemas import Performance, ReviewList, SchoolDetail, SchoolList
+from app.routers.stats import frequent_errors
+from app.schemas import FrequentErrors, Performance, ReviewList, SchoolDetail, SchoolList
 
 router = APIRouter(prefix="/schools", tags=["schools"])
 
@@ -336,6 +337,23 @@ def get_school_performance(
     if result is None:
         raise HTTPException(404, "No statistics for this school, category and year")
     return result
+
+
+@router.get("/{school_id}/frequent-errors", response_model=FrequentErrors)
+def get_school_frequent_errors(
+    school_id: int,
+    category: str | None = Query(None, description="All categories if omitted"),
+    year: int | None = Query(None, description="All years if omitted"),
+    limit: int = Query(4, ge=1, le=50),
+    db: Session = Depends(get_db),
+):
+    """Most frequent practical-exam penalties of this school's candidates."""
+    exists = db.execute(
+        text("SELECT 1 FROM scoli_auto WHERE school_id = :id AND is_active"), {"id": school_id}
+    ).scalar()
+    if exists is None:
+        raise HTTPException(404, "School not found")
+    return frequent_errors(db, category, year, school_id, limit)
 
 
 @router.get("/{school_id}/reviews", response_model=ReviewList)

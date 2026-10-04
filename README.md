@@ -84,6 +84,8 @@ curl http://localhost:8000/api/stats/overview
 curl http://localhost:8000/api/filters
 curl "http://localhost:8000/api/schools?category=B&limit=5"
 curl http://localhost:8000/api/schools/featured
+curl "http://localhost:8000/api/stats/frequent-errors?category=B&year=2025"
+curl "http://localhost:8000/api/schools/3/frequent-errors?category=B"
 ```
 
 `/api/schools` and `/api/schools/featured` default to category `B` and the latest year
@@ -101,11 +103,10 @@ npm run dev     # http://localhost:5173, already allowed by CORS_ORIGINS
 ## Public dataset
 
 `scripts.seed_public` loads the data from `database/public.sql` into a database named
-`postgresql`, limited to the 12 tables the API reads (76 schools, 4.8k statistics rows,
-843 reviews, 45k exams). Column definitions, keys, checks, indexes and foreign keys are
-kept as in the dump. It skips the attempt-level tables (`tentative_examinare`,
-`penalizari_tentative`, …), which make up most of the file, so it loads in a few seconds
-without psql.
+`postgresql`, limited to the 16 tables the API reads (76 schools, 4.8k statistics rows,
+843 reviews, 45k exams, 116k exam attempts, 106k penalties). Column definitions, keys,
+checks, indexes and foreign keys are kept as in the dump. It skips the tables no endpoint
+reads (`candidati`, `dosare_instruire`, …), so it loads in under 20 seconds without psql.
 
 On top of the dump it:
 
@@ -115,6 +116,8 @@ On top of the dump it:
   without statistics (ids 46–86);
 - keeps every theory pass rate strictly between 80% and 95%, adjusting the dump's own
   statistics rows where needed;
+- loads practical-exam attempts and penalties (`tentative_examinare`, `penalizari_tentative`)
+  and generates them for exams that have none, for `/frequent-errors`;
 - sets every licence to expire between 2028 and 2031;
 - recomputes `rank_position` for every category, year and month
   (0.3 × theory + 0.4 × practice + 0.3 × practice first-try rate).

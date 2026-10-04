@@ -1,7 +1,7 @@
 """Load the real dataset from database/public.sql, limited to the tables the API reads.
 
 The full dump is ~58 MB and mostly exam-attempt detail (tentative_examinare,
-penalizari_tentative, candidati, ...) that no endpoint touches. This script copies
+candidati, dosare_instruire, ...) that no endpoint touches. This script copies
 only the API tables, with their original column definitions, rows, keys, checks,
 indexes and foreign keys, into a dedicated database.
 
@@ -9,9 +9,12 @@ On top of the dump it then:
 - adds back the 10 real schools from seed_demo (verified addresses and coordinates);
 - generates 2025 and 2026 statistics and exams for every school the dump has no
   statistics for, with theory pass rates strictly between 80% and 95%;
+- generates practical-exam attempts and penalties (frequent errors) for those exams,
+  sampling penalty types with the dump's own frequencies;
 - adjusts the dump's own statistics so every theory pass rate is inside (80%, 95%);
 - sets every licence to expire between 2028 and 2031;
-- recomputes rank_position for every category, year and month.
+- recomputes rank_position for every category, year and month;
+- applies database/seed/monthly_statistics.sql for smooth month-by-month curves.
 
     python -m scripts.seed_public                  # -> postgresql
     python -m scripts.seed_public --db other_name
@@ -34,6 +37,7 @@ from scripts.seed_demo import SCHOOL_ADDRESSES, SCHOOLS as REAL_SCHOOLS
 
 ROOT = Path(__file__).resolve().parents[1]
 DUMP = ROOT.parent / 'database' / 'public.sql'
+MONTHLY_SQL = ROOT.parent / 'database' / 'seed' / 'monthly_statistics.sql'
 load_dotenv(ROOT / '.env')
 CONNECTION = dict(
     user=os.getenv('DB_USER', 'postgres'), password=os.getenv('DB_PASSWORD', 'postgres'),
@@ -45,6 +49,8 @@ API_TABLES = {
     'raioane', 'localitati', 'categorii_permise', 'scoli_auto', 'categorii_scoli_auto',
     'filiale_scoli_auto', 'statistici_scoli_perioade', 'utilizatori', 'recenzii',
     'examene', 'instructori', 'vehicule',
+    # practical-exam attempts and their penalties, for the frequent-errors stats
+    'tentative_examinare', 'penalizari_tentative', 'tipuri_penalizari', 'tipuri_probe_practice',
 }
 
 # Navicat section headers, e.g. "-- Primary Key structure for table scoli_auto"
@@ -214,6 +220,84 @@ def generate_statistics(cur, rng: random.Random) -> int:
     return len({school for school, _ in pairs})
 
 
+POLIGON, CITY = 3, 4  # tipuri_probe_practice
+
+
+def generate_attempts(cur, rng: random.Random) -> tuple[int, int]:
+    """Practical-exam attempts and penalties for practice exams that have none.
+
+    Each exam is a training-ground (poligon) attempt followed by one or two city attempts,
+    ending with the exam's result. Penalty types are drawn per category and practice type
+    with the frequencies seen in the dump; a passed attempt stays within the 20-point limit,
+    a failed one goes over it.
+    """
+    cur.execute('SELECT practice_type_id, coalesce(max_penalty_points, 20) FROM tipuri_probe_practice')
+    limits = dict(cur.fetchall())
+    cur.execute('''
+        SELECT tp.category_code, tp.practice_type_id, tp.penalty_id, tp.points, tp.is_eliminatory,
+               1 + count(pt.id) AS weight
+        FROM tipuri_penalizari tp
+        LEFT JOIN penalizari_tentative pt
+          ON pt.category_code = tp.category_code AND pt.penalty_id = tp.penalty_id
+        WHERE tp.is_active
+        GROUP BY 1, 2, 3, 4, 5
+    ''')
+    catalog: dict[tuple[str, int], list[tuple[int, int, bool, int]]] = {}
+    for code, practice_type, penalty_id, points, eliminatory, weight in cur.fetchall():
+        catalog.setdefault((code, practice_type), []).append((penalty_id, points, eliminatory, weight))
+
+    cur.execute('''
+        SELECT e.exam_id, e.category_code, e.result_id, e.attempts_total, e.first_attempt_date
+        FROM examene e
+        WHERE e.exam_type_id = 2
+          AND NOT EXISTS (SELECT 1 FROM tentative_examinare t
+                          WHERE t.exam_id = e.exam_id AND t.exam_type_id = e.exam_type_id)
+        ORDER BY e.exam_id
+    ''')
+    exams = cur.fetchall()
+    cur.execute('SELECT coalesce(max(attempt_id), 0) FROM tentative_examinare')
+    attempt_id = cur.fetchone()[0]
+
+    def penalties(code: str, practice_type: int, passed: bool) -> list[tuple[int, int, int]]:
+        options = catalog.get((code, practice_type))
+        if not options:
+            return []
+        limit = limits.get(practice_type, 20)
+        lines, total = [], 0
+        for _ in range(rng.choice([0, 1, 1, 2, 2, 3]) if passed else 8):
+            penalty_id, points, eliminatory, _w = rng.choices(options, [o[3] for o in options])[0]
+            quantity = 2 if not eliminatory and rng.random() < 0.1 else 1
+            if passed and (eliminatory or total + points * quantity > limit):
+                continue
+            lines.append((penalty_id, quantity, points * quantity))
+            total += points * quantity
+            if not passed and (eliminatory or total > limit):
+                break
+        return lines
+
+    attempts, lines = [], []
+    for exam_id, code, result_id, attempts_total, first_date in exams:
+        steps = [(POLIGON, True)] + [(CITY, False)] * (max(attempts_total, 1) - 1) + [(CITY, result_id == PASSED)]
+        day = first_date
+        for number, (practice_type, passed) in enumerate(steps, 1):
+            attempt_id += 1
+            found = penalties(code, practice_type, passed)
+            attempts.append((attempt_id, exam_id, 2, number, day, day.isoweekday(),
+                             PASSED if passed else FAILED, practice_type, sum(p[2] for p in found)))
+            lines.extend((attempt_id, code, penalty_id, quantity, points)
+                         for penalty_id, quantity, points in found)
+            day += dt.timedelta(days=rng.randint(7, 21) if not passed else rng.randint(1, 7))
+
+    execute_values(cur, '''
+        INSERT INTO tentative_examinare (attempt_id, exam_id, exam_type_id, attempt_number, exam_date,
+                                         weekday_id, result_id, practice_type_id, total_points)
+        VALUES %s''', attempts, page_size=5000)
+    execute_values(cur, '''
+        INSERT INTO penalizari_tentative (attempt_id, category_code, penalty_id, quantity, points)
+        VALUES %s''', lines, page_size=5000)
+    return len(attempts), len(lines)
+
+
 def refresh_licences(cur, rng: random.Random) -> None:
     """Every licence expires between 2028-01-01 and 2031-12-31, issued five years earlier."""
     cur.execute('SELECT school_id FROM scoli_auto ORDER BY school_id')
@@ -309,15 +393,27 @@ def main() -> None:
         add_real_schools(cur, rng)
         generated = generate_statistics(cur, rng)
         normalized = normalize_theory(cur, rng)
+        attempts, penalties = generate_attempts(cur, random.Random(42))
+        # Joins behind /frequent-errors: penalties -> attempts -> exams
+        cur.execute('''
+            CREATE INDEX ix_penalizari_tentative_attempt ON penalizari_tentative (attempt_id);
+            CREATE INDEX ix_tentative_examinare_exam ON tentative_examinare (exam_id, exam_type_id);
+        ''')
         refresh_licences(cur, rng)
         recompute_ranks(cur)
+
+    # Smooth month-by-month curves; the file manages its own transaction
+    db.autocommit = True
+    with db.cursor() as cur:
+        cur.execute(MONTHLY_SQL.read_text(encoding='utf-8'))
         cur.execute('ANALYZE')
     db.close()
 
     elapsed = time.perf_counter() - started
     print(f'{db_name} seeded from {DUMP.name}: {len(ddl)} tables, {len(rows)} rows, '
           f'{len(REAL_SCHOOLS)} real schools added, statistics generated for {generated} schools, '
-          f'theory rates adjusted in {normalized} rows '
+          f'theory rates adjusted in {normalized} rows, {attempts} practice attempts with '
+          f'{penalties} penalties generated '
           f'in {elapsed:.1f}s.')
 
 
