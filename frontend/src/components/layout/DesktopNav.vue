@@ -5,7 +5,8 @@
     <ul class="flex items-center gap-6 h-full">
       <li class="h-full">
         <RouterLink
-            to="/"
+            to="/schools"
+            active-class="!text-zinc-800 after:w-full"
             class="relative flex items-center h-full
                  !text-zinc-500 font-semibold
                  transition-colors duration-300
@@ -21,7 +22,8 @@
 
       <li class="h-full">
         <RouterLink
-            to="/"
+            to="/compare"
+            active-class="!text-zinc-800 after:w-full"
             class="relative flex items-center h-full
                  !text-zinc-500 font-semibold
                  transition-colors duration-300
@@ -37,7 +39,8 @@
 
       <li class="h-full">
         <RouterLink
-            to="/"
+            to="/map"
+            active-class="!text-zinc-800 after:w-full"
             class="relative flex items-center h-full
                  !text-zinc-500 font-semibold
                  transition-colors duration-300
@@ -53,7 +56,8 @@
 
       <li class="h-full">
         <RouterLink
-            to="/compare"
+            to="/statistics"
+            active-class="!text-zinc-800 after:w-full"
             class="relative flex items-center h-full
                  !text-zinc-500 font-semibold
                  transition-colors duration-300

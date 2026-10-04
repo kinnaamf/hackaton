@@ -18,7 +18,7 @@ const emit = defineEmits<{
         <li>
           <RouterLink
               class="font-semibold text-zinc-700"
-              to="/"
+              to="/schools"
               @click="emit('close')"
           >
             Scoli auto
