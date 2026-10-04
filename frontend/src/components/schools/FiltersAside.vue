@@ -110,7 +110,6 @@ watch(currentFilters, (filters) => emit('change', filters), { deep: true })
 
     <div class="mt-5 border-t border-slate-200 pt-5">
       <label class="flex cursor-pointer items-center gap-2 text-sm text-slate-500"><input v-model="activeOnly" type="checkbox" class="size-4 rounded accent-indigo-500">Doar școli active</label>
-      <label class="mt-3 flex cursor-pointer items-center gap-2 text-sm text-slate-500"><input v-model="verifiedOnly" type="checkbox" class="size-4 rounded accent-indigo-500">Date verificate</label>
     </div>
 
     <button type="button" class="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-purple-800 hover:text-purple-900" @click="resetFilters">
