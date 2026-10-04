@@ -39,7 +39,7 @@ function initMap() {
   markers = L.layerGroup().addTo(map.value)
 }
 
-function renderMarkers() {
+function renderMarkers(fitToPoints = true) {
   if (!map.value || !markers) return
   markers.clearLayers()
 
@@ -58,16 +58,16 @@ function renderMarkers() {
     marker.addTo(markers!)
   })
 
-  if (points.length) {
+  if (fitToPoints && points.length) {
     map.value.fitBounds(L.latLngBounds(points.map((school) => [school.latitude!, school.longitude!])), { padding: [40, 40], maxZoom: 11 })
   }
 }
 
 function selectSchool(school: SchoolLocation) {
   selectedId.value = school.id
-  renderMarkers()
+  renderMarkers(false)
   if (map.value && school.latitude != null && school.longitude != null) {
-    map.value.setView([school.latitude, school.longitude], 15)
+    map.value.flyTo([school.latitude, school.longitude], 16, { duration: 0.6 })
   }
 }
 
