@@ -15,12 +15,12 @@ const isActive = ref(false)
 </script>
 
 <template>
-  <header class="w-full bg-white px-6 md:px-8 lg:px-12"
+  <header class="w-full bg-white"
           ref="header"
           :class="{ 'border-b border-gray-200': !isActive }"
   >
     <div
-        class="h-16 md:h-20 max-w-360 mx-auto flex items-center justify-between bg-white px-6"
+        class="mx-auto flex h-16 max-w-[1440px] items-center justify-between bg-white px-5 md:h-20 md:px-8 lg:px-12"
     >
       <RouterLink to="/">
         <img

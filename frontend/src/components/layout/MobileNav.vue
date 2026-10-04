@@ -14,7 +14,7 @@ const emit = defineEmits<{
         v-if="isActive"
         class="bg-white border-b border-gray-200 md:hidden"
     >
-      <ul class="px-6 py-4 flex flex-col gap-3">
+      <ul class="flex flex-col gap-3 px-5 py-4">
         <li>
           <RouterLink
               class="font-semibold text-zinc-700"
