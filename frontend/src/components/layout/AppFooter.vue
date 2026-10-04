@@ -1,4 +1,6 @@
 <script setup lang="ts">
+const footerLinkClass = 'transition-colors duration-200 hover:text-purple-800'
+
 const footerGroups = [
   {
     title: 'Platformă',
@@ -43,7 +45,7 @@ const currentYear = new Date().getFullYear()
           <!-- Brand -->
           <div>
             <img
-                src="/logo.png"
+                src="/logo.webp"
                 alt="Path Drive"
                 class="h-12 w-40 object-contain"
             >
@@ -61,10 +63,10 @@ const currentYear = new Date().getFullYear()
             </h3>
 
             <ul class="mt-4 space-y-3 text-sm text-slate-700">
-              <li><RouterLink to="/schools">Școli auto</RouterLink></li>
-              <li><RouterLink to="/compare">Compară școli</RouterLink></li>
-              <li><RouterLink to="/map">Hartă</RouterLink></li>
-              <li><RouterLink to="/statistics">Statistici</RouterLink></li>
+              <li><RouterLink to="/schools" :class="footerLinkClass">Școli auto</RouterLink></li>
+              <li><RouterLink to="/compare" :class="footerLinkClass">Compară școli</RouterLink></li>
+              <li><RouterLink to="/map" :class="footerLinkClass">Hartă</RouterLink></li>
+              <li><RouterLink to="/statistics" :class="footerLinkClass">Statistici</RouterLink></li>
             </ul>
           </div>
 
@@ -75,10 +77,10 @@ const currentYear = new Date().getFullYear()
             </h3>
 
             <ul class="mt-4 space-y-3 text-sm text-slate-700">
-              <li><RouterLink to="/methodology">Metodologie</RouterLink></li>
-              <li><RouterLink to="/how-it-works">Cum funcționează</RouterLink></li>
-              <li><RouterLink to="/data">Despre date</RouterLink></li>
-              <li><RouterLink to="/faq">Întrebări frecvente</RouterLink></li>
+              <li><RouterLink to="/methodology" :class="footerLinkClass">Metodologie</RouterLink></li>
+              <li><RouterLink to="/how-it-works" :class="footerLinkClass">Cum funcționează</RouterLink></li>
+              <li><RouterLink to="/data" :class="footerLinkClass">Despre date</RouterLink></li>
+              <li><RouterLink to="/faq" :class="footerLinkClass">Întrebări frecvente</RouterLink></li>
             </ul>
           </div>
 
@@ -89,10 +91,10 @@ const currentYear = new Date().getFullYear()
             </h3>
 
             <ul class="mt-4 space-y-3 text-sm text-slate-700">
-              <li><RouterLink to="/about">Despre proiect</RouterLink></li>
-              <li><RouterLink to="/contact">Contact</RouterLink></li>
-              <li><RouterLink to="/privacy">Politica de confidențialitate</RouterLink></li>
-              <li><RouterLink to="/terms">Termeni și condiții</RouterLink></li>
+              <li><RouterLink to="/about" :class="footerLinkClass">Despre proiect</RouterLink></li>
+              <li><RouterLink to="/contact" :class="footerLinkClass">Contact</RouterLink></li>
+              <li><RouterLink to="/privacy" :class="footerLinkClass">Politica de confidențialitate</RouterLink></li>
+              <li><RouterLink to="/terms" :class="footerLinkClass">Termeni și condiții</RouterLink></li>
             </ul>
           </div>
 

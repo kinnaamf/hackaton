@@ -16,7 +16,7 @@
                  after:transition-all after:duration-300
                  hover:after:w-full"
         >
-          Scoli auto
+          Școli auto
         </RouterLink>
       </li>
 
@@ -33,7 +33,7 @@
                  after:transition-all after:duration-300
                  hover:after:w-full"
         >
-          Compara
+          Compară
         </RouterLink>
       </li>
 

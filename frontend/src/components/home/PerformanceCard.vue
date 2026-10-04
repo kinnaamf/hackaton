@@ -37,6 +37,10 @@ onMounted(async () => {
   featured.value = await getFeatured('B', 2025)
 })
 
+function formatPercent(value: number | null | undefined) {
+  return value == null ? '—' : `${Math.round(value)}%`
+}
+
 const chartData = computed(() => ({
   labels: (featured.value?.performance ?? []).map(
       (item) => monthNames[item.month],
@@ -171,7 +175,7 @@ const chartOptions: ChartOptions<'line'> = {
         <!-- Theory -->
         <div class="border-r border-slate-200 pb-4 pr-4">
           <p class="text-[18px] font-bold leading-none text-slate-800">
-            {{ featured.stats.theoryPassRate }}%
+            {{ formatPercent(featured.stats.theoryPassRate) }}
           </p>
 
           <p class="mt-2 text-[11px] leading-tight text-slate-500">
@@ -182,7 +186,7 @@ const chartOptions: ChartOptions<'line'> = {
         <!-- Practice -->
         <div class="pb-4 pl-4">
           <p class="text-[18px] font-bold leading-none text-slate-800">
-            {{ featured.stats.practicePassRate }}%
+            {{ formatPercent(featured.stats.practicePassRate) }}
           </p>
 
           <p class="mt-2 text-[11px] leading-tight text-slate-500">
@@ -193,7 +197,7 @@ const chartOptions: ChartOptions<'line'> = {
         <!-- First try -->
         <div class="border-r border-slate-200 pr-4 pt-1">
           <p class="text-[18px] font-bold leading-none text-slate-800">
-            {{ featured.stats.practiceFirstTryRate }}%
+            {{ formatPercent(featured.stats.practiceFirstTryRate) }}
           </p>
 
           <p class="mt-2 text-[11px] leading-tight text-slate-500">

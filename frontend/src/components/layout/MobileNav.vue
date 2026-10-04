@@ -21,7 +21,7 @@ const emit = defineEmits<{
               to="/schools"
               @click="emit('close')"
           >
-            Scoli auto
+            Școli auto
           </RouterLink>
         </li>
 
@@ -31,7 +31,7 @@ const emit = defineEmits<{
               to="/compare"
               @click="emit('close')"
           >
-            Compara
+            Compară
           </RouterLink>
         </li>
 

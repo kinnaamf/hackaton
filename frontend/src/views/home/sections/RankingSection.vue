@@ -18,15 +18,13 @@ const visibleCount = ref(3)
 
 const tabs: Tab[] = [
   { label: 'Teorie', value: 'theory' },
-  { label: 'Practica', value: 'practice' },
-  { label: 'Prima incercare', value: 'firstTry' },
+  { label: 'Practică', value: 'practice' },
+  { label: 'Prima încercare', value: 'firstTry' },
 ]
 
-const activeTab = ref<Tab>(tabs[0]!)
+const activeTab = ref<'theory' | 'practice' | 'firstTry'>('theory')
 
-const sort = computed<'theory' | 'practice' | 'firstTry'>(
-    () => activeTab.value.value as 'theory' | 'practice' | 'firstTry',
-)
+const sort = computed(() => activeTab.value)
 
 async function loadSchools() {
   loading.value = true
@@ -66,7 +64,7 @@ onMounted(async () => {
 })
 
 watch(
-    [selectedCategory, selectedYear, () => activeTab.value.value],
+    [selectedCategory, selectedYear, activeTab],
     () => {
       visibleCount.value = 3
       void loadSchools()
@@ -130,21 +128,22 @@ watch(
       </div>
     </template>
 
-    <div class="border-b border-slate-200 pb-3">
-      <div class="flex w-max min-w-full gap-1 overflow-x-auto rounded-xl bg-white p-1 sm:min-w-0">
+    <div class="border-b border-slate-200">
+      <div class="flex flex-wrap gap-1">
         <button
             v-for="tab in tabs"
             :key="tab.value"
             type="button"
-            class="whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold transition-all duration-200"
+            class="relative whitespace-nowrap px-3 py-3 text-sm font-semibold text-zinc-500 transition-colors duration-300 hover:text-purple-800"
             :class="
-          activeTab === tab
-            ? 'bg-purple-800 text-white shadow-sm'
-            : 'text-slate-500 hover:bg-purple-50 hover:text-purple-800'
+          activeTab === tab.value
+            ? 'text-purple-800'
+            : ''
         "
-            @click="activeTab = tab"
+            @click="activeTab = tab.value as 'theory' | 'practice' | 'firstTry'"
         >
           {{ tab.label }}
+          <span v-if="activeTab === tab.value" class="absolute -bottom-px left-0 h-0.5 w-full bg-purple-800" />
         </button>
       </div>
     </div>
