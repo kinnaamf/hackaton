@@ -81,7 +81,10 @@ async function loadSchools() {
       sort: 'practice',
       limit: 100,
     })
-    schools.value = (await Promise.all(response.items.map((school) => getSchoolLocation(school.id))))
+    schools.value = await Promise.all(response.items.map(async (school) => {
+      const location = await getSchoolLocation(school.id)
+      return { ...school, latitude: location.latitude, longitude: location.longitude }
+    }))
     const requestedId = typeof route.query.school === 'string' ? Number(route.query.school) : NaN
     selectedId.value = schools.value.find((school) => school.id === requestedId)?.id ?? schools.value[0]?.id ?? null
     await nextTick()
@@ -125,7 +128,7 @@ watch(() => route.query.school, (schoolId) => {
           <button type="submit" class="h-10 w-full rounded-lg bg-purple-800 text-sm font-semibold text-white transition-all duration-200 hover:bg-purple-900">Aplică filtrele</button>
         </form>
 
-        <p class="mt-5 text-xs text-slate-500">{{ loading ? 'Se încarcă…' : `${schools.length} rezultate` }}</p>
+        <p class="pt-4 text-xs text-slate-500">{{ loading ? 'Se încarcă…' : `${schools.length} rezultate` }}</p>
         <div class="mt-2 max-h-[430px] space-y-1 overflow-y-auto pr-1">
           <button v-for="school in schools" :key="school.id" type="button" class="w-full rounded-lg border-l-4 p-3 text-left transition-colors" :class="school.id === selectedId ? 'border-purple-800 bg-purple-50' : 'border-transparent hover:bg-slate-50'" @click="selectSchool(school)">
             <div class="flex items-center gap-1.5 text-sm font-semibold text-slate-800"><RouterLink :to="schoolProfilePath(school)" class="hover:text-purple-800">{{ school.name }}</RouterLink><CheckCircle2 v-if="school.verified" class="size-3.5 text-emerald-600" /></div>
