@@ -7,6 +7,7 @@ import { getSchools } from '@/api/schools'
 import type { Filters } from '@/types/api'
 import type { SchoolCard } from '@/types/school-card'
 import type { Tab } from '@/types/tab'
+import { schoolProfilePath } from '@/utils/school'
 
 const filters = ref<Filters | null>(null)
 const selectedCategory = ref('B')
@@ -48,8 +49,8 @@ function showMore() {
   visibleCount.value += 3
 }
 
-function formatPercent(value: number) {
-  return `${Math.round(value)}%`
+function formatPercent(value: number | null | undefined) {
+  return Number.isFinite(value) ? `${Math.round(value!)}%` : '—'
 }
 
 onMounted(async () => {
@@ -153,7 +154,7 @@ watch(
       <div v-for="school in schools.slice(0, visibleCount)" :key="school.id" class="bg-white rounded-2xl p-4 shadow-xs">
         <!-- Card header -->
         <div class="flex gap-2 items-center">
-          <span class="text-[17px] font-medium">{{ school.name }}</span>
+          <RouterLink :to="schoolProfilePath(school)" class="text-[17px] font-medium transition-colors hover:text-purple-800">{{ school.name }}</RouterLink>
           <span class="flex items-center gap-1 text-emerald-500 text-xs font-bold h-4 shrink-0">
             <LucideCircleCheck class="text-emerald-500 h-3 w-3" :stroke-width="3"/>
             Date verificate
@@ -161,10 +162,10 @@ watch(
         </div>
 
         <!-- Address -->
-        <div class="flex gap-2 items-center mt-3">
+        <RouterLink :to="{ path: '/map', query: { school: String(school.id) } }" class="flex gap-2 items-center mt-3 transition-colors hover:text-purple-800">
           <LucideMapPin class="w-4 h-4 stroke-gray-400"/>
           <span class="text-gray-400 text-sm">{{ school.city }}, {{ school.address }}</span>
-        </div>
+        </RouterLink>
 
         <!-- Categories -->
         <div class="flex gap-2 items-center mt-4">
@@ -295,7 +296,7 @@ watch(
 
           <!-- Profile -->
           <RouterLink
-              :to="`/schools/${school.id}`"
+              :to="schoolProfilePath(school)"
               class="mt-4 inline-flex h-10 items-center justify-center
            rounded-lg bg-purple-800 px-4
            text-sm font-semibold !text-white

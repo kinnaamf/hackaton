@@ -2,15 +2,16 @@
 import { computed } from 'vue'
 import { CheckCircle2, Plus, X } from '@lucide/vue'
 import { comparedSchools, removeSchoolFromCompare } from '@/stores/compare'
+import { schoolProfilePath } from '@/utils/school'
 
 const rows = computed(() => [
   { label: 'Localitate', value: (school: typeof comparedSchools.value[number]) => school.city || '—' },
   { label: 'Date verificate', value: (school: typeof comparedSchools.value[number]) => school.verified ? 'Da' : 'Nu' },
   { label: 'Poziție clasament', value: (school: typeof comparedSchools.value[number]) => school.rank ? `#${school.rank}` : '—' },
   { label: 'Candidați', value: (school: typeof comparedSchools.value[number]) => school.candidatesCount.toLocaleString('ro-MD') },
-  { label: 'Promovare teorie', highlight: true, value: (school: typeof comparedSchools.value[number]) => school.theoryPassRate != null ? `${Math.round(school.theoryPassRate)}%` : '—' },
-  { label: 'Promovare practică', highlight: true, value: (school: typeof comparedSchools.value[number]) => school.practicePassRate != null ? `${Math.round(school.practicePassRate)}%` : '—' },
-  { label: 'Practică din prima încercare', value: (school: typeof comparedSchools.value[number]) => school.firstTryPassRate != null ? `${Math.round(school.firstTryPassRate)}%` : '—' },
+  { label: 'Promovare teorie', highlight: true, value: (school: typeof comparedSchools.value[number]) => Number.isFinite(school.theoryPassRate) ? `${Math.round(school.theoryPassRate)}%` : '—' },
+  { label: 'Promovare practică', highlight: true, value: (school: typeof comparedSchools.value[number]) => Number.isFinite(school.practicePassRate) ? `${Math.round(school.practicePassRate)}%` : '—' },
+  { label: 'Practică din prima încercare', value: (school: typeof comparedSchools.value[number]) => Number.isFinite(school.firstTryPassRate) ? `${Math.round(school.firstTryPassRate)}%` : '—' },
   { label: 'Rating', value: (school: typeof comparedSchools.value[number]) => school.rating != null ? `${school.rating} / 5` : '—' },
   { label: 'Recenzii', value: (school: typeof comparedSchools.value[number]) => school.reviewsCount.toLocaleString('ro-MD') },
   { label: 'Preț de la', value: (school: typeof comparedSchools.value[number]) => school.priceFrom != null ? `${school.priceFrom.toLocaleString('ro-MD')} MDL` : '—' },
@@ -45,11 +46,11 @@ const rows = computed(() => [
               <div class="flex items-start justify-between gap-3">
                 <div>
                   <div class="flex items-center gap-1.5 font-semibold text-slate-800">
-                    {{ school.name }}
+                    <RouterLink :to="schoolProfilePath(school)" class="hover:text-purple-800">{{ school.name }}</RouterLink>
                     <CheckCircle2 v-if="school.verified" class="size-4 text-emerald-600" />
                   </div>
                   <p class="mt-1 text-xs font-normal text-slate-500">{{ school.city }}</p>
-                  <RouterLink :to="`/schools/${school.id}`" class="mt-3 inline-block text-xs font-semibold text-purple-800 hover:text-purple-900">Vezi profilul →</RouterLink>
+                  <RouterLink :to="schoolProfilePath(school)" class="mt-3 inline-block text-xs font-semibold text-purple-800 hover:text-purple-900">Vezi profilul →</RouterLink>
                 </div>
                 <button type="button" class="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700" :aria-label="`Elimină ${school.name}`" @click="removeSchoolFromCompare(school.id)"><X class="size-4" /></button>
               </div>
