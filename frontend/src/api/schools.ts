@@ -46,8 +46,10 @@ export function getSchool(schoolId: number) {
     return api<SchoolProfile>(`/schools/${schoolId}`)
 }
 
-export function getSchoolPerformance(schoolId: number, category = 'B', year = 2025) {
-    return api<Performance>(`/schools/${schoolId}/performance`, { query: { category, year } })
+export function getSchoolPerformance(schoolId: number, category = 'B', year?: number) {
+    return api<Performance>(`/schools/${schoolId}/performance`, {
+        query: { category, ...(year ? { year } : {}) },
+    })
 }
 
 export function getSchoolReviews(schoolId: number) {
